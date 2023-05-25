@@ -1,0 +1,24 @@
+{
+  "name": "anime-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "anime-bot",
+    "telegram-bot",
+    "anime-search-bot"
+  ],
+  "author": "j tuluve",
+  "license": "ISC",
+  "dependencies": {
+    "case-anything": "^2.1.13",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "fetch": "^1.1.0",
+    "https": "^1.0.0",
+    "telegraf": "^4.12.2"
+  }
+}
