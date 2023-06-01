@@ -14,6 +14,13 @@ const URL = process.env.URL;
 const bot = new Telegraf(process.env.BOT_TOKEN)
 
 
+bot.command("start", ctx=>{
+    ctx.replyWithPhoto({source:"./assets/robin-facing.jpg"},{
+        caption:"Konnichiwa😇😇\n\nI'm <b>Robin</b>. I can generate anime related informations, latest episodes, popular animes and much more. I'm still learning (beta) and I may make mistakes. I look forward to help you.✨✨",
+        parse_mode: "html"
+    })
+})
+
 //top airing command
 bot.command("topairing", (ctx)=>{
     api(`${URL}/top-airing`, (d)=>{

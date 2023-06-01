@@ -23,7 +23,7 @@ const superWizard = new Scenes.WizardScene(
 	}
 	//work from here
 	api(`${URL}/search?keyw=${encodeURIComponent(ctx.message.text)}`,d=>{
-		if(d.length<1){ ctx.reply("💨 No anime found!!"); return}
+		if(d.length<1){ ctx.replyWithPhoto({source:"./assets/no-robin.jpg"},{caption: "<b>💨 No anime found!!</b>\n\n🔴 Please try different keywords and try again.", parse_mode:"html"}); return}
 		let message = "🔍 Search Result\n\n"
 		let buttons = []
 		let row = []
