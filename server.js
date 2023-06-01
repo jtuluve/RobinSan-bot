@@ -1,13 +1,17 @@
 //local process env
 require('dotenv').config();
-const { Telegraf } = require("telegraf")
-const bot = new Telegraf(process.env.BOT_TOKEN)
-const https = require("https")
+
+//imports
+const { Telegraf, session, Scenes } = require("telegraf")
 const express = require('express')
-const {capitalCase} = require("case-anything")
-
+const {capitalCase} = require("case-anything");
+const {api} = require("./api.js")
+const {superWizard} = require("./scenes.js")
 const URL = process.env.URL;
+// const {hideIt, retrieveMessage} = require("./hidden.js")
+// console.log(retrieveMessage(hideIt("yo", "mama")))
 
+const bot = new Telegraf(process.env.BOT_TOKEN)
 
 
 //top airing command
@@ -104,9 +108,10 @@ bot.command("popular", (ctx)=>{
             }
             i++;
         }
+        if(rowb.length>1){buttons.push(rowb); rowb=[];}
         rowb.push({"text":">", "callback_data":"popularpage 2"})
         buttons.push(rowb)
-        message += '🔻select any anime for more details🔻'
+        message += '\n🔻select any anime for more details🔻'
         ctx.replyWithPhoto({url: d[0].animeImg}, {
             caption: message.trim(), 
             parse_mode:"html",
@@ -121,6 +126,9 @@ bot.command("popular", (ctx)=>{
 bot.action(/popularpage ([0-9]+)/, (ctx)=>{
     let pgnum = parseInt(ctx.match[1])
         api(`${URL}/popular?page=${pgnum}`, (d)=>{
+            if(d.length<1){
+                ctx.reply("No more found!!")
+            }
             let message = `✨Popular Anime✨(page ${pgnum})\n\n`
             let i = 1;
             let buttons = []
@@ -139,7 +147,7 @@ bot.action(/popularpage ([0-9]+)/, (ctx)=>{
             if(pgnum+1<26) rowb.push({"text":">", "callback_data":`popularpage ${pgnum+1}`});
             buttons.push(rowb)
             message += '\n🔻select any anime for more details🔻'
-            let m = ctx.editMessageMedia({
+            ctx.editMessageMedia({
                 media: d[0].animeImg,
                 type: 'photo',
                 chat_id:ctx.callbackQuery.message.chat.id,
@@ -153,7 +161,81 @@ bot.action(/popularpage ([0-9]+)/, (ctx)=>{
         })
     
 })
+// {
+//     animeId: 'mashle',
+//     episodeId: 'mashle-episode-7',
+//     animeTitle: 'Mashle',
+//     episodeNum: '7',
+//     subOrDub: 'SUB',
+//     animeImg: 'https://gogocdn.net/cover/mashle-1680202211.png',
+//     episodeUrl: 'https://gogoanime.film///mashle-episode-7'
+//   }
 
+//Recent Episodes
+bot.command(["recentsubep","recentsubeps","newsubep"], (ctx)=>{
+    api(`${URL}/recent-release?type=1&page=1`, (d)=>{
+        if(d.length<1){
+            ctx.reply("Sorry no episodes found!! Please try again later.");
+            return;
+        }
+        ctx.replyWithPhoto({url:d[0].animeImg||"./robin.jpg"}, {
+            caption: `<b>✨LATEST SUB EP✨</b>\n🔸Anime: <b>${capitalCase(d[0].animeId.split("-").join(" "))}</b>\n\n🔸New Episode Number: <b>${d[0].episodeNum||"N/A"}</b>\n🔸Type: <b>${d[0].subOrDub||"N/A"}</b>`,
+            parse_mode: "html",
+            reply_markup: {
+                "inline_keyboard":[
+                    [
+                        {text:"Watch Now", url: d[0].episodeUrl},
+                        {text:"anime details", callback_data:"details 2"}
+                    ],[
+                        {text:"next >", callback_data:"recentep sub 1"}
+                    ]
+                ]
+            }
+        })
+    })
+})
+
+bot.action(/recentep ([A-z]+) ([0-9]+)/, ctx=>{
+    let ep = parseInt(ctx.match[2])-1
+    let types = {"sub":1, "dub":2, "chi":3}
+    let type = types[ctx.match[1]]||1
+    api(`${URL}/recent-release?type=${type}`,(d)=>{
+        ep = ep==-1?d.length-1:ep
+        console.log(d[0], d[1])
+        if(!d[ep]) return ctx.reply("No new episodes!!")
+        let buttons = []
+        let btn = []
+        //continue working from here
+        
+        if(ep>1) btn.push({text:"< prev", callback_data:`recentep ${ctx.match[1]} ` +  (ep)})
+        if(ep+2>d.length) btn.push({text:"next >", callback_data:`recentep ${ctx.match[1]} ` + (ep+2)})
+        buttons.push([{text:"Watch Now", url: d[ep].episodeUrl}, {text:"anime details", callback_data:`recentep ${ctx.match[1]} `}])
+        buttons.push(btn)
+        ctx.editMessageMedia({
+            media: d[ep].animeImg||"./robin.jpg",
+            type: 'photo',
+            chat_id: ctx.callbackQuery.message.chat.id,
+            message_id: ctx.callbackQuery.message.message_id,
+            caption: `<b>✨LATEST SUB EP✨</b>\n🔸Anime: <b>${capitalCase(d[ep].animeId.split("-").join(" "))}</b>\n\n🔸New Episode Number: <b>${d[ep].episodeNum||"N/A"}</b>\n🔸Type: <b>${d[ep].subOrDub||"N/A"}</b>`,
+            parse_mode:"html"
+            
+        }, {reply_markup : {
+            "inline_keyboard": buttons
+            }})
+    })
+})
+
+const stage = new Scenes.Stage([superWizard]);
+
+bot.use(session());
+bot.use(stage.middleware());
+
+//anime search
+bot.command(["search", 'animesearch', "anime", "anime-search"], ctx=>ctx.scene.enter("anime-search"))
+
+
+
+//anime details action
 bot.action(/details ([0-9]+)/, (ctx)=>{
     let select = ctx.callbackQuery.message.caption_entities[parseInt(ctx.match[1])-1]
     let id = ctx.callbackQuery.message.caption.slice(select.offset, select.offset+select.length).split(" ").join("-")
@@ -178,22 +260,3 @@ app.get('/', function (req, res) {
 app.listen(3000)
 
 //functions
-function api(url, callback){
-  
-    const request = https.request(url, (response) => {
-        let data = '';
-        response.on('data', (chunk) => {
-            data = data + chunk.toString();
-        });
-      
-        response.on('end', ()=>{
-            callback(JSON.parse(data))
-        });
-    })
-      
-    request.on('error', (error) => {
-        console.log('An error', error);
-    });
-      
-    request.end();
-}
