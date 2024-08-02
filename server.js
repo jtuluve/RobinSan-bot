@@ -263,18 +263,10 @@ bot.action(/details ([0-9]+)/, (ctx) => {
 })
 bot.launch({
   webhook: {
-    domain: "https://robinsan-bot.jtuluve.repl.co",
+    domain: process.env.BOT_URL,
     port: process.env.PORT || 3000
   }
 })
 
-const app = express()
-
-app.get('/', function(req, res) {
-  res.send('Hello World')
-  console.log("running")
-})
-
-app.listen(3001)
 
 //functions
