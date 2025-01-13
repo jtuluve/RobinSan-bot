@@ -1,25 +1,15 @@
 //local process env
 require('dotenv').config();
-
-//imports
-const { Telegraf, session, Scenes } = require("telegraf")
+const { Telegraf } = require("telegraf")
+const bot = new Telegraf(process.env.BOT_TOKEN)
+const https = require("https")
 const express = require('express')
 const {capitalCase} = require("case-anything");
+const {hideIt, retrieveMessage} = require("./hidden.js")
 const {api} = require("./api.js")
-const {superWizard} = require("./scenes.js")
 const URL = process.env.URL;
-// const {hideIt, retrieveMessage} = require("./hidden.js")
-// console.log(retrieveMessage(hideIt("yo", "mama")))
+console.log(retrieveMessage(hideIt("yo", "mama")))
 
-const bot = new Telegraf(process.env.BOT_TOKEN)
-
-
-bot.command("start", ctx=>{
-    ctx.replyWithPhoto({source:"./assets/robin-facing.jpg"},{
-        caption:"Konnichiwa😇😇\n\nI'm <b>Robin</b>. I can generate anime related informations, latest episodes, popular animes and much more. I'm still learning (beta) and I may make mistakes. I look forward to help you.✨✨",
-        parse_mode: "html"
-    })
-})
 
 //top airing command
 bot.command("topairing", (ctx)=>{
@@ -133,9 +123,6 @@ bot.command("popular", (ctx)=>{
 bot.action(/popularpage ([0-9]+)/, (ctx)=>{
     let pgnum = parseInt(ctx.match[1])
         api(`${URL}/popular?page=${pgnum}`, (d)=>{
-            if(d.length<1){
-                ctx.reply("No more found!!")
-            }
             let message = `✨Popular Anime✨(page ${pgnum})\n\n`
             let i = 1;
             let buttons = []
@@ -194,7 +181,7 @@ bot.command(["recentsubep","recentsubeps","newsubep"], (ctx)=>{
                         {text:"Watch Now", url: d[0].episodeUrl},
                         {text:"anime details", callback_data:"details 2"}
                     ],[
-                        {text:"next >", callback_data:"recentep sub 2"}
+                        {text:"next >", callback_data:"recentep sub 1"}
                     ]
                 ]
             }
@@ -212,10 +199,11 @@ bot.action(/recentep ([A-z]+) ([0-9]+)/, ctx=>{
         if(!d[ep]) return ctx.reply("No new episodes!!")
         let buttons = []
         let btn = []
+        //continue working from here
         
         if(ep>1) btn.push({text:"< prev", callback_data:`recentep ${ctx.match[1]} ` +  (ep)})
-        if(ep+2<d.length) btn.push({text:"next >", callback_data:`recentep ${ctx.match[1]} ` + (ep+2)})
-        buttons.push([{text:"Watch Now", url: d[ep].episodeUrl}, {text:"anime details", callback_data:`details 2`}])
+        if(ep+2>d.length) btn.push({text:"next >", callback_data:`recentep ${ctx.match[1]} ` + (ep+2)})
+        buttons.push([{text:"Watch Now", url: d[ep].episodeUrl}, {text:"anime details", callback_data:`recentep ${ctx.match[1]} `}])
         buttons.push(btn)
         ctx.editMessageMedia({
             media: d[ep].animeImg||"./robin.jpg",
@@ -231,13 +219,6 @@ bot.action(/recentep ([A-z]+) ([0-9]+)/, ctx=>{
     })
 })
 
-const stage = new Scenes.Stage([superWizard]);
-
-bot.use(session());
-bot.use(stage.middleware());
-
-//anime search
-bot.command(["search", 'animesearch', "anime", "anime-search"], ctx=>ctx.scene.enter("anime-search"))
 
 
 
@@ -247,18 +228,14 @@ bot.action(/details ([0-9]+)/, (ctx)=>{
     let id = ctx.callbackQuery.message.caption.slice(select.offset, select.offset+select.length).split(" ").join("-")
     api(`${URL}/anime-details/${id}`,(d)=>{
         if(d.error){ctx.reply("Sorry. Anime Not Found."); return;}
-        let msg = `<b>Title</b>: ${d.animeTitle} \n\n<b>Type</b>: ${d.type}\n\n<b>Released on</b>: ${d.releasedDate}\n\n<b>Status</b>: ${d.status}\n\n<b>Genres</b>: ${d.genres.join(", ")}\n\n<b>Other Name</b>: ${d.otherNames}\n\n<b>Total Episodes</b>: ${d.totalEpisodes}\n\n<b>Details</b>: ${d.synopsis}`;
-        if(msg.length>1010){
-            msg = msg.split(0,1010) + "..."
-        }
         ctx.sendPhoto(d.animeImg, {
-            caption: msg,
+            caption: `<b>Title</b>: ${d.animeTitle} \n\n<b>Type</b>: ${d.type}\n\n<b>Released on</b>: ${d.releasedDate}\n\n<b>Status</b>: ${d.status}\n\n<b>Genres</b>: ${d.genres.join(", ")}\n\n<b>Other Name</b>: ${d.otherNames}\n\n<b>Total Episodes</b>: ${d.totalEpisodes}\n\n<b>Details</b>: ${d.synopsis}`,
             parse_mode: "HTML"
         })
 
     })
 })
-bot.launch({webhook: {port: 3001}})
+bot.launch()
 
 const app = express()
 
@@ -267,6 +244,6 @@ app.get('/', function (req, res) {
   console.log("running")
 })
 
-app.listen(3001)
+app.listen(3000)
 
 //functions
