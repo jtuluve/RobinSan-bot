@@ -329,7 +329,9 @@ bot.action(/details ([0-9]+)/, (ctx) => {
     });
   });
 });
-bot.launch({ webhook: { port: process.env.PORT } });
+bot.launch({
+  webhook: { domain: process.env.BOT_URL, port: process.env.PORT },
+});
 
 const app = express();
 
