@@ -8,10 +8,13 @@ const { capitalCase } = require("case-anything");
 const { api } = require("../api.js");
 const { superWizard } = require("../scenes.js");
 const URL = process.env.URL;
-// const {hideIt, retrieveMessage} = require("./hidden.js")
-// console.log(retrieveMessage(hideIt("yo", "mama")))
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
+
+// bot.on("message", async (ctx, next) => {
+//   console.log(ctx.message);
+//   return await next();
+// });
 
 bot.command("start", (ctx) => {
   ctx.replyWithPhoto(
@@ -216,6 +219,7 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
 //Recent Episodes
 bot.command(["recentsubep", "recentsubeps", "newsubep"], (ctx) => {
   api(`${URL}/recent-release?type=1&page=1`, (d) => {
+    console.log(d);
     if (d.length < 1) {
       ctx.reply("Sorry no episodes found!! Please try again later.");
       return;
@@ -329,17 +333,18 @@ bot.action(/details ([0-9]+)/, (ctx) => {
     });
   });
 });
-bot.launch({
-  webhook: { domain: process.env.BOT_URL, port: process.env.PORT },
-});
-
 const app = express();
+(async () => {
+  app.use(await bot.createWebhook({ domain: process.env.BOT_URL }));
+  app.get("/", function (req, res) {
+    res.send("Hello World");
+    console.log("running");
+  });
+  // bot.launch(/* {
+  //   webhook: { domain: process.env.BOT_URL },
+  // } */);
+})();
 
-app.get("/", function (req, res) {
-  res.send("Hello World");
-  console.log("running");
-});
-
-app.listen(3000);
-
-//functions
+app.listen(process.env.PORT, () =>
+  console.log("server running on port " + process.env.PORT)
+);
