@@ -5,8 +5,8 @@ require("dotenv").config();
 const { Telegraf, session, Scenes } = require("telegraf");
 const express = require("express");
 const { capitalCase } = require("case-anything");
-const { api } = require("./api.js");
-const { superWizard } = require("./scenes.js");
+const { api } = require("../api.js");
+const { superWizard } = require("../scenes.js");
 const URL = process.env.URL;
 // const {hideIt, retrieveMessage} = require("./hidden.js")
 // console.log(retrieveMessage(hideIt("yo", "mama")))
@@ -317,19 +317,21 @@ bot.action(/details ([0-9]+)/, (ctx) => {
     }
     ctx.sendPhoto(d.animeImg, {
       caption: `<b>Title</b>: ${d.animeTitle} \n\n<b>Type</b>: ${
-        d.type
+        d.type || "N/A"
       }\n\n<b>Released on</b>: ${d.releasedDate}\n\n<b>Status</b>: ${
-        d.status
+        d.status || "N/A"
       }\n\n<b>Genres</b>: ${d.genres.join(", ")}\n\n<b>Other Name</b>: ${
-        d.otherNames
+        d.otherNames || "N/A"
       }\n\n<b>Total Episodes</b>: ${d.totalEpisodes}\n\n<b>Details</b>: ${
-        d.synopsis
+        d.synopsis || "N/A"
       }`,
       parse_mode: "HTML",
     });
   });
 });
-bot.launch({ webhook: { port: process.env.PORT } });
+bot.launch({
+  webhook: { domain: process.env.BOT_URL, port: process.env.PORT },
+});
 
 const app = express();
 
