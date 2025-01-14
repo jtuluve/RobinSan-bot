@@ -45,9 +45,7 @@ bot.command("/top/anime?filter=airing", (ctx) => {
     let rowb = [];
     for (let e of d.data) {
       message += `${i}) Title:  <b>${
-        e.titles.find((e) => e.type == "English")?.title ||
-        e.titles[0]?.title ||
-        "No Title"
+        e.title_english || e.title || "No Title"
       }</b>\n`;
       if (rowb.length < 4) {
         rowb.push({ text: `${i}`, callback_data: `details ${e.mal_id}` });
@@ -57,7 +55,8 @@ bot.command("/top/anime?filter=airing", (ctx) => {
       }
       i++;
     }
-    d.pagination.has_next_page && rowb.push({ text: ">", callback_data: "topairpage 2" });
+    d.pagination.has_next_page &&
+      rowb.push({ text: ">", callback_data: "topairpage 2" });
     buttons.push(rowb);
     message += "🔻select any anime for more details🔻";
     ctx.replyWithPhoto(
@@ -86,9 +85,7 @@ bot.action(/topairpage ([0-9]+)/, (ctx) => {
     let rowb = [];
     for (let e of d.data) {
       message += `${i}) Title:  <b>${
-        e.titles.find((e) => e.type == "English")?.title ||
-        e.titles[0]?.title ||
-        "No Title"
+        e.title_english || e.title || "No Title"
       }</b>\n`;
       if (rowb.length < 4) {
         rowb.push({ text: `${i}`, callback_data: `details ${e.mal_id}` });
@@ -144,9 +141,7 @@ bot.command("popular", (ctx) => {
     let rowb = [];
     for (let e of d.data) {
       message += `${i}) Title:  <b>${
-        e.titles.find((e) => e.type == "English")?.title ||
-        e.titles[0]?.title ||
-        "No Title"
+        e.title_english || e.title || "No Title"
       }</b>\n`;
       if (rowb.length < 4) {
         rowb.push({ text: `${i}`, callback_data: `details ${i}` });
@@ -191,9 +186,7 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
     let rowb = [];
     for (let e of d.data) {
       message += `${i}) Title:  <b>${
-        e.titles.find((e) => e.type == "English")?.title ||
-        e.titles[0]?.title ||
-        "No Title"
+        e.title_english || e.title || "No Title"
       }</b>\n`;
       if (rowb.length < 4) {
         rowb.push({ text: `${i}`, callback_data: `details ${i}` });
@@ -233,15 +226,6 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
       .catch((err) => console.log(err));
   });
 });
-// {
-//     animeId: 'mashle',
-//     episodeId: 'mashle-episode-7',
-//     animeTitle: 'Mashle',
-//     episodeNum: '7',
-//     subOrDub: 'SUB',
-//     animeImg: 'https://gogocdn.net/cover/mashle-1680202211.png',
-//     episodeUrl: 'https://gogoanime.film///mashle-episode-7'
-//   }
 
 //Recent Episodes
 // bot.command(["recentsubep", "recentsubeps", "newsubep"], (ctx) => {
@@ -258,8 +242,8 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
 //       },
 //       {
 //         caption: `<b>✨LATEST SUB EP✨</b>\n🔸Anime: <b>${
-//           e.titles.find((e) => e.type == "English")?.title ||
-//           e.titles[0]?.title ||
+//           e.title_english ||
+//           e.title ||
 //           "No Title"
 //         }</b>\n\n🔸New Episode Number: <b>${
 //           d.data[0].episodeNum || "N/A"
@@ -313,8 +297,8 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
 //         chat_id: ctx.callbackQuery.message.chat.id,
 //         message_id: ctx.callbackQuery.message.message_id,
 //         caption: `<b>✨LATEST SUB EP✨</b>\n🔸Anime: <b>${
-//           e.titles.find((e) => e.type == "English")?.title ||
-//           e.titles[0]?.title ||
+//           e.title_english ||
+//           e.title ||
 //           "No Title"
 //         }</b>\n\n🔸New Episode Number: <b>${
 //           d[ep].episodeNum || "N/A"
@@ -342,26 +326,23 @@ bot.command(["search", "animesearch", "anime", "anime-search"], (ctx) =>
 
 //anime details action
 bot.action(/details ([0-9]+)/, (ctx) => {
-  let select =
-    ctx.callbackQuery.message.caption_entities[parseInt(ctx.match[1]) - 1];
-  let id = ctx.callbackQuery.message.caption
-    .slice(select.offset, select.offset + select.length)
-    .split(" ")
-    .join("-");
-  api(`${URL}/anime-details/${id}`, (d) => {
-    if (d.error) {
+  let id = ctx.match[1];
+  api(`${URL}/anime/${id}`, (d) => {
+    if (d.error || !d.data || !d.data.title) {
       ctx.reply("Sorry. Anime Not Found.");
       return;
     }
-    ctx.sendPhoto(d.animeImg, {
-      caption: `<b>Title</b>: ${d.animeTitle} \n\n<b>Type</b>: ${
-        d.type || "N/A"
-      }\n\n<b>Released on</b>: ${d.releasedDate}\n\n<b>Status</b>: ${
-        d.status || "N/A"
-      }\n\n<b>Genres</b>: ${d.genres.join(", ")}\n\n<b>Other Name</b>: ${
-        d.otherNames || "N/A"
-      }\n\n<b>Total Episodes</b>: ${d.totalEpisodes}\n\n<b>Details</b>: ${
-        d.synopsis || "N/A"
+    ctx.sendPhoto(d.data.images.jpg?.large_image_url || "./robin.jpg", {
+      caption: `<b>Title</b>: ${
+        d.data.title_english || d.data.title
+      } \n\n<b>Type</b>: ${d.data.type || "N/A"}\n\n<b>Released on</b>: ${
+        d.releasedDate
+      }\n\n<b>Status</b>: ${d.data.status || "N/A"}\n\n<b>Genres</b>: ${d.genres
+        .map((e) => e.name)
+        .join(", ")}\n\n<b>Other Name</b>: ${
+        d.data.titles.map((e) => e.title).join(", ") || "N/A"
+      }\n\n<b>Total Episodes</b>: ${d.episodes}\n\n<b>Details</b>: ${
+        d.data.synopsis || "N/A"
       }`,
       parse_mode: "HTML",
     });
