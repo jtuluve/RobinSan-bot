@@ -268,7 +268,7 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
 //   let types = { sub: 1, dub: 2, chi: 3 };
 //   let type = types[ctx.match[1]] || 1;
 //   api(`${URL}/recent-release?type=${type}`, (d) => {
-//     ep = ep == -1 ? d.length - 1 : ep;
+//     ep = ep == -1 ? d.data.length - 1 : ep;
 //     console.log(d.data[0], d[1]);
 //     if (!d[ep]) return ctx.reply("No new episodes!!");
 //     let buttons = [];
@@ -280,7 +280,7 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
 //         text: "< prev",
 //         callback_data: `recentep ${ctx.match[1]} ` + ep,
 //       });
-//     if (ep + 2 > d.length)
+//     if (ep + 2 > d.data.length)
 //       btn.push({
 //         text: "next >",
 //         callback_data: `recentep ${ctx.match[1]} ` + (ep + 2),
@@ -336,12 +336,14 @@ bot.action(/details ([0-9]+)/, (ctx) => {
       caption: `<b>Title</b>: ${
         d.data.title_english || d.data.title
       } \n\n<b>Type</b>: ${d.data.type || "N/A"}\n\n<b>Released on</b>: ${
-        d.releasedDate
-      }\n\n<b>Status</b>: ${d.data.status || "N/A"}\n\n<b>Genres</b>: ${d.genres
+        d.data.releasedDate
+      }\n\n<b>Status</b>: ${
+        d.data.status || "N/A"
+      }\n\n<b>Genres</b>: ${d.data.genres
         .map((e) => e.name)
         .join(", ")}\n\n<b>Other Name</b>: ${
         d.data.titles.map((e) => e.title).join(", ") || "N/A"
-      }\n\n<b>Total Episodes</b>: ${d.episodes}\n\n<b>Details</b>: ${
+      }\n\n<b>Total Episodes</b>: ${d.data.episodes}\n\n<b>Details</b>: ${
         d.data.synopsis || "N/A"
       }`,
       parse_mode: "HTML",
