@@ -4,9 +4,8 @@ require("dotenv").config();
 //imports
 const { Telegraf, session, Scenes } = require("telegraf");
 const express = require("express");
-const { capitalCase } = require("case-anything");
-const { api } = require("../api.js");
-const { superWizard } = require("../scenes.js");
+const { api } = require("./api.js");
+const { superWizard } = require("./scenes.js");
 const URL = process.env.URL;
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -28,29 +27,44 @@ bot.command("start", (ctx) => {
 });
 
 //top airing command
-bot.command("topairing", (ctx) => {
+bot.command("/top/anime?filter=airing", (ctx) => {
   api(`${URL}/top-airing`, (d) => {
-    let message = "✨Top Airing Anime✨\n\n";
+    if (d.data.length < 1) {
+      ctx.replyWithPhoto(
+        { source: "./assets/no-robin.jpg" },
+        {
+          caption: "<b>💨 No anime found!!</b>\n\n🔴 Please try again later.",
+          parse_mode: "html",
+        }
+      );
+      return;
+    }
+    let message = "✨Top Airing Anime(page 1)✨\n\n";
     let i = 1;
     let buttons = [];
     let rowb = [];
-    for (e of d) {
-      message += `${i}) Title:  <b>${capitalCase(
-        e.animeId.split("-").join(" ")
-      )}</b>\n`;
+    for (let e of d.data) {
+      message += `${i}) Title:  <b>${
+        e.titles.find((e) => e.type == "English")?.title ||
+        e.titles[0]?.title ||
+        "No Title"
+      }</b>\n`;
       if (rowb.length < 4) {
-        rowb.push({ text: `${i}`, callback_data: `details ${i}` });
+        rowb.push({ text: `${i}`, callback_data: `details ${e.mal_id}` });
       } else {
         buttons.push(rowb);
-        rowb = [{ text: `${i}`, callback_data: `details ${i}` }];
+        rowb = [{ text: `${i}`, callback_data: `details ${e.mal_id}` }];
       }
       i++;
     }
-    rowb.push({ text: ">", callback_data: "topairpage 2" });
+    d.pagination.has_next_page && rowb.push({ text: ">", callback_data: "topairpage 2" });
     buttons.push(rowb);
     message += "🔻select any anime for more details🔻";
     ctx.replyWithPhoto(
-      { url: d[0].animeImg },
+      {
+        url:
+          d.data[0]?.images.jpg?.large_image_url || "./assets/robin-facing.jpg",
+      },
       {
         caption: message.trim(),
         parse_mode: "html",
@@ -65,40 +79,44 @@ bot.command("topairing", (ctx) => {
 //topairingaction
 bot.action(/topairpage ([0-9]+)/, (ctx) => {
   let pgnum = parseInt(ctx.match[1]);
-  api(`${URL}/top-airing?page=${pgnum}`, (d) => {
+  api(`${URL}/top/anime?filter=airing&page=${pgnum}`, (d) => {
     let message = `✨Top Airing Anime✨(page ${pgnum})\n\n`;
     let i = 1;
     let buttons = [];
     let rowb = [];
-    for (e of d) {
-      message += `${i}) Title:  <b>${capitalCase(
-        e.animeId.split("-").join(" ")
-      )}</b>\n`;
+    for (let e of d.data) {
+      message += `${i}) Title:  <b>${
+        e.titles.find((e) => e.type == "English")?.title ||
+        e.titles[0]?.title ||
+        "No Title"
+      }</b>\n`;
       if (rowb.length < 4) {
-        rowb.push({ text: `${i}`, callback_data: `details ${i}` });
+        rowb.push({ text: `${i}`, callback_data: `details ${e.mal_id}` });
       } else {
         buttons.push(rowb);
-        rowb = [{ text: `${i}`, callback_data: `details ${i}` }];
+        rowb = [{ text: `${i}`, callback_data: `details ${e.mal_id}` }];
       }
       i++;
     }
-    if (pgnum - 1 > 0)
+    if (pgnum > 1)
       rowb.push({ text: "<", callback_data: `topairpage ${pgnum - 1}` });
-    if (pgnum + 1 < 26)
+    if (d.pagination.has_next_page)
       rowb.push({ text: ">", callback_data: `topairpage ${pgnum + 1}` });
     buttons.push(rowb);
     message += "\n🔻select any anime for more details🔻";
-    /* ctx.replyWithPhoto({url: d[0].animeImg}, {
+    /* ctx.replyWithPhoto({url: d.data[0].animeImg}, {
         caption: message.trim(), 
         parse_mode:"html",
         reply_markup : {
             "inline_keyboard": buttons
         }
     }) */
-    let m = ctx
+    ctx
       .editMessageMedia(
         {
-          media: d[0].animeImg,
+          media:
+            d.data[0]?.images.jpg?.large_image_url ||
+            "./assets/robin-facing.jpg",
           type: "photo",
           chat_id: ctx.callbackQuery.message.chat.id,
           message_id: ctx.callbackQuery.message.message_id,
@@ -119,15 +137,17 @@ bot.action(/topairpage ([0-9]+)/, (ctx) => {
 
 //popular command
 bot.command("popular", (ctx) => {
-  api(`${URL}/popular`, (d) => {
+  api(`${URL}/top/anime?filter=bypopularity`, (d) => {
     let message = "✨Popular Anime✨\n\n";
     let i = 1;
     let buttons = [];
     let rowb = [];
-    for (e of d) {
-      message += `${i}) Title:  <b>${capitalCase(
-        e.animeId.split("-").join(" ")
-      )}</b>\n`;
+    for (let e of d.data) {
+      message += `${i}) Title:  <b>${
+        e.titles.find((e) => e.type == "English")?.title ||
+        e.titles[0]?.title ||
+        "No Title"
+      }</b>\n`;
       if (rowb.length < 4) {
         rowb.push({ text: `${i}`, callback_data: `details ${i}` });
       } else {
@@ -144,7 +164,10 @@ bot.command("popular", (ctx) => {
     buttons.push(rowb);
     message += "\n🔻select any anime for more details🔻";
     ctx.replyWithPhoto(
-      { url: d[0].animeImg },
+      {
+        url:
+          d.data[0]?.images.jpg?.large_image_url || "./assets/robin-facing.jpg",
+      },
       {
         caption: message.trim(),
         parse_mode: "html",
@@ -158,18 +181,20 @@ bot.command("popular", (ctx) => {
 
 bot.action(/popularpage ([0-9]+)/, (ctx) => {
   let pgnum = parseInt(ctx.match[1]);
-  api(`${URL}/popular?page=${pgnum}`, (d) => {
-    if (d.length < 1) {
+  api(`${URL}/top/anime?filter=bypopularity&page=${pgnum}`, (d) => {
+    if (d.data.length < 1) {
       ctx.reply("No more found!!");
     }
     let message = `✨Popular Anime✨(page ${pgnum})\n\n`;
     let i = 1;
     let buttons = [];
     let rowb = [];
-    for (e of d) {
-      message += `${i}) Title:  <b>${capitalCase(
-        e.animeId.split("-").join(" ")
-      )}</b>\n`;
+    for (let e of d.data) {
+      message += `${i}) Title:  <b>${
+        e.titles.find((e) => e.type == "English")?.title ||
+        e.titles[0]?.title ||
+        "No Title"
+      }</b>\n`;
       if (rowb.length < 4) {
         rowb.push({ text: `${i}`, callback_data: `details ${i}` });
       } else {
@@ -180,14 +205,16 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
     }
     if (pgnum - 1 > 0)
       rowb.push({ text: "<", callback_data: `popularpage ${pgnum - 1}` });
-    if (pgnum + 1 < 26)
+    if (d.pagination.has_next_page)
       rowb.push({ text: ">", callback_data: `popularpage ${pgnum + 1}` });
     buttons.push(rowb);
     message += "\n🔻select any anime for more details🔻";
     ctx
       .editMessageMedia(
         {
-          media: d[0].animeImg,
+          media:
+            d.data[0]?.images.jpg?.large_image_url ||
+            "./assets/robin-facing.jpg",
           type: "photo",
           chat_id: ctx.callbackQuery.message.chat.id,
           message_id: ctx.callbackQuery.message.message_id,
@@ -217,84 +244,91 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
 //   }
 
 //Recent Episodes
-bot.command(["recentsubep", "recentsubeps", "newsubep"], (ctx) => {
-  api(`${URL}/recent-release?type=1&page=1`, (d) => {
-    console.log(d);
-    if (d.length < 1) {
-      ctx.reply("Sorry no episodes found!! Please try again later.");
-      return;
-    }
-    ctx.replyWithPhoto(
-      { url: d[0].animeImg || "./robin.jpg" },
-      {
-        caption: `<b>✨LATEST SUB EP✨</b>\n🔸Anime: <b>${capitalCase(
-          d[0].animeId.split("-").join(" ")
-        )}</b>\n\n🔸New Episode Number: <b>${
-          d[0].episodeNum || "N/A"
-        }</b>\n🔸Type: <b>${d[0].subOrDub || "N/A"}</b>`,
-        parse_mode: "html",
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: "Watch Now", url: d[0].episodeUrl },
-              { text: "anime details", callback_data: "details 2" },
-            ],
-            [{ text: "next >", callback_data: "recentep sub 1" }],
-          ],
-        },
-      }
-    );
-  });
-});
+// bot.command(["recentsubep", "recentsubeps", "newsubep"], (ctx) => {
+//   api(`${URL}/recent-release?type=1&page=1`, (d) => {
+//     console.log(d);
+//     if (d.data?.length < 1) {
+//       ctx.reply("Sorry no episodes found!! Please try again later.");
+//       return;
+//     }
+//     ctx.replyWithPhoto(
+//       {
+//         url:
+//           d.data[0]?.images.jpg?.large_image_url || "./assets/robin-facing.jpg",
+//       },
+//       {
+//         caption: `<b>✨LATEST SUB EP✨</b>\n🔸Anime: <b>${
+//           e.titles.find((e) => e.type == "English")?.title ||
+//           e.titles[0]?.title ||
+//           "No Title"
+//         }</b>\n\n🔸New Episode Number: <b>${
+//           d.data[0].episodeNum || "N/A"
+//         }</b>\n🔸Type: <b>${d.data[0].subOrDub || "N/A"}</b>`,
+//         parse_mode: "html",
+//         reply_markup: {
+//           inline_keyboard: [
+//             [
+//               { text: "Watch Now", url: d.data[0].episodeUrl },
+//               { text: "anime details", callback_data: "details 2" },
+//             ],
+//             [{ text: "next >", callback_data: "recentep sub 1" }],
+//           ],
+//         },
+//       }
+//     );
+//   });
+// });
 
-bot.action(/recentep ([A-z]+) ([0-9]+)/, (ctx) => {
-  let ep = parseInt(ctx.match[2]) - 1;
-  let types = { sub: 1, dub: 2, chi: 3 };
-  let type = types[ctx.match[1]] || 1;
-  api(`${URL}/recent-release?type=${type}`, (d) => {
-    ep = ep == -1 ? d.length - 1 : ep;
-    console.log(d[0], d[1]);
-    if (!d[ep]) return ctx.reply("No new episodes!!");
-    let buttons = [];
-    let btn = [];
-    //continue working from here
+// bot.action(/recentep ([A-z]+) ([0-9]+)/, (ctx) => {
+//   let ep = parseInt(ctx.match[2]) - 1;
+//   let types = { sub: 1, dub: 2, chi: 3 };
+//   let type = types[ctx.match[1]] || 1;
+//   api(`${URL}/recent-release?type=${type}`, (d) => {
+//     ep = ep == -1 ? d.length - 1 : ep;
+//     console.log(d.data[0], d[1]);
+//     if (!d[ep]) return ctx.reply("No new episodes!!");
+//     let buttons = [];
+//     let btn = [];
+//     //continue working from here
 
-    if (ep > 1)
-      btn.push({
-        text: "< prev",
-        callback_data: `recentep ${ctx.match[1]} ` + ep,
-      });
-    if (ep + 2 > d.length)
-      btn.push({
-        text: "next >",
-        callback_data: `recentep ${ctx.match[1]} ` + (ep + 2),
-      });
-    buttons.push([
-      { text: "Watch Now", url: d[ep].episodeUrl },
-      { text: "anime details", callback_data: `recentep ${ctx.match[1]} ` },
-    ]);
-    buttons.push(btn);
-    ctx.editMessageMedia(
-      {
-        media: d[ep].animeImg || "./robin.jpg",
-        type: "photo",
-        chat_id: ctx.callbackQuery.message.chat.id,
-        message_id: ctx.callbackQuery.message.message_id,
-        caption: `<b>✨LATEST SUB EP✨</b>\n🔸Anime: <b>${capitalCase(
-          d[ep].animeId.split("-").join(" ")
-        )}</b>\n\n🔸New Episode Number: <b>${
-          d[ep].episodeNum || "N/A"
-        }</b>\n🔸Type: <b>${d[ep].subOrDub || "N/A"}</b>`,
-        parse_mode: "html",
-      },
-      {
-        reply_markup: {
-          inline_keyboard: buttons,
-        },
-      }
-    );
-  });
-});
+//     if (ep > 1)
+//       btn.push({
+//         text: "< prev",
+//         callback_data: `recentep ${ctx.match[1]} ` + ep,
+//       });
+//     if (ep + 2 > d.length)
+//       btn.push({
+//         text: "next >",
+//         callback_data: `recentep ${ctx.match[1]} ` + (ep + 2),
+//       });
+//     buttons.push([
+//       { text: "Watch Now", url: d[ep].episodeUrl },
+//       { text: "anime details", callback_data: `recentep ${ctx.match[1]} ` },
+//     ]);
+//     buttons.push(btn);
+//     ctx.editMessageMedia(
+//       {
+//         media: d[ep].animeImg || "./robin.jpg",
+//         type: "photo",
+//         chat_id: ctx.callbackQuery.message.chat.id,
+//         message_id: ctx.callbackQuery.message.message_id,
+//         caption: `<b>✨LATEST SUB EP✨</b>\n🔸Anime: <b>${
+//           e.titles.find((e) => e.type == "English")?.title ||
+//           e.titles[0]?.title ||
+//           "No Title"
+//         }</b>\n\n🔸New Episode Number: <b>${
+//           d[ep].episodeNum || "N/A"
+//         }</b>\n🔸Type: <b>${d[ep].subOrDub || "N/A"}</b>`,
+//         parse_mode: "html",
+//       },
+//       {
+//         reply_markup: {
+//           inline_keyboard: buttons,
+//         },
+//       }
+//     );
+//   });
+// });
 
 const stage = new Scenes.Stage([superWizard]);
 
