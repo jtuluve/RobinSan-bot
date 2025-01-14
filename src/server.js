@@ -144,10 +144,10 @@ bot.command("popular", (ctx) => {
         e.title_english || e.title || "No Title"
       }</b>\n`;
       if (rowb.length < 4) {
-        rowb.push({ text: `${i}`, callback_data: `details ${i}` });
+        rowb.push({ text: `${i}`, callback_data: `details ${e.mal_id}` });
       } else {
         buttons.push(rowb);
-        rowb = [{ text: `${i}`, callback_data: `details ${i}` }];
+        rowb = [{ text: `${i}`, callback_data: `details ${e.mal_id}` }];
       }
       i++;
     }
@@ -332,20 +332,24 @@ bot.action(/details ([0-9]+)/, (ctx) => {
       ctx.reply("Sorry. Anime Not Found.");
       return;
     }
+    let caption = `<b>Title</b>: ${
+      d.data.title_english || d.data.title
+    } \n\n<b>Type</b>: ${d.data.type || "N/A"}\n\n<b>Released on</b>: ${
+      d.data.releasedDate
+    }\n\n<b>Status</b>: ${
+      d.data.status || "N/A"
+    }\n\n<b>Genres</b>: ${d.data.genres
+      .map((e) => e.name)
+      .join(", ")}\n\n<b>Other Name</b>: ${
+      d.data.titles.map((e) => e.title).join(", ") || "N/A"
+    }\n\n<b>Total Episodes</b>: ${d.data.episodes}\n\n`;
+    caption += `<b>Description</b>: ${
+      caption.length + d.data.synopsis.length > 1024
+        ? d.data.synopsis.slice(0, 1000 - caption.length) + "..."
+        : d.data.synopsis
+    }`;
     ctx.sendPhoto(d.data.images.jpg?.large_image_url || "./robin.jpg", {
-      caption: `<b>Title</b>: ${
-        d.data.title_english || d.data.title
-      } \n\n<b>Type</b>: ${d.data.type || "N/A"}\n\n<b>Released on</b>: ${
-        d.data.releasedDate
-      }\n\n<b>Status</b>: ${
-        d.data.status || "N/A"
-      }\n\n<b>Genres</b>: ${d.data.genres
-        .map((e) => e.name)
-        .join(", ")}\n\n<b>Other Name</b>: ${
-        d.data.titles.map((e) => e.title).join(", ") || "N/A"
-      }\n\n<b>Total Episodes</b>: ${d.data.episodes}\n\n<b>Details</b>: ${
-        d.data.synopsis || "N/A"
-      }`,
+      caption,
       parse_mode: "HTML",
     });
   });
