@@ -54,14 +54,14 @@ const superWizard = new Scenes.WizardScene(
         if (row.length < 4) {
           row.push({
             text: parseInt(i) + 1,
-            callback_data: `details ${parseInt(i) + 1}`,
+            callback_data: `details ${e.mal_id}`,
           });
         } else {
           buttons.push(row);
           row = [];
           row.push({
             text: parseInt(i) + 1,
-            callback_data: `details ${parseInt(i) + 1}`,
+            callback_data: `details ${e.mal_id}`,
           });
         }
       }
