@@ -1,9 +1,6 @@
-const { Scenes /* , session, Telegraf */ } = require("telegraf");
+const { Scenes } = require("telegraf");
 const { api } = require("./api");
 const URL = process.env.URL;
-// const bot = new Telegraf("5787466260:AAHeqMGHynCjb2ZP2cWuYWocEp919aZi6mY");
-
-// bot.on("message", ctx=>console.log(ctx.message))
 
 const superWizard = new Scenes.WizardScene(
   "anime-search",
