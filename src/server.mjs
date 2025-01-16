@@ -344,8 +344,8 @@ bot.command(["search", "animesearch", "anime", "anime-search"], async (ctx) =>
 //anime details action
 bot.action(/details ([0-9]+)/, async (ctx) => {
   let id = ctx.match[1];
-  api(`${API_URL}/anime/${id}`, async(d) => {
-    if (d.error || !d.data || !d.data.title) {
+  await api(`${API_URL}/anime/${id}`, async (d) => {
+    if (!d || d.error || !d.data || !d.data.title) {
       await ctx.reply("Sorry. Anime Not Found.");
       return;
     }
@@ -367,7 +367,7 @@ bot.action(/details ([0-9]+)/, async (ctx) => {
     }`;
     await ctx.sendPhoto(
       d.data.images.jpg?.large_image_url ||
-        process.env.BOT_URL + "assets/robin.jpg",
+        readFileSync(join(__dirname, "../assets/robin-facing.jpg")),
       {
         caption,
         parse_mode: "HTML",
@@ -376,7 +376,7 @@ bot.action(/details ([0-9]+)/, async (ctx) => {
   });
 });
 const app = express();
-app.use("/assets", express.static("../assets"));
+app.use("/static", express.static(join(__dirname, "../assets")));
 
 async function initializeServer() {
   try {
