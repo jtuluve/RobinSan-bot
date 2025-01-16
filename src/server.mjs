@@ -376,7 +376,7 @@ bot.action(/details ([0-9]+)/, async (ctx) => {
   });
 });
 const app = express();
-app.use("/static", express.static(join(__dirname, "../assets")));
+app.use("/assets", express.static(join(__dirname, "../assets")));
 
 async function initializeServer() {
   try {
