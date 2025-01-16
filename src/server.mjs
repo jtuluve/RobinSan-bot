@@ -19,7 +19,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.command("start", (ctx) => {
   ctx.replyWithPhoto(
-    { source: "./assets/robin-facing.jpg" },
+    { source: "../assets/robin-facing.jpg" },
     {
       caption:
         "Konnichiwa😇😇\n\nI'm <b>Robin</b>. I can generate anime related informations, latest episodes, popular animes and much more. I'm still learning (beta) and I may make mistakes. I look forward to help you.✨✨",
@@ -33,7 +33,7 @@ bot.command("/top/anime?filter=airing", (ctx) => {
   api(`${URL}/top-airing`, (d) => {
     if (d.data.length < 1) {
       ctx.replyWithPhoto(
-        { source: "./assets/no-robin.jpg" },
+        { source: "../assets/no-robin.jpg" },
         {
           caption: "<b>💨 No anime found!!</b>\n\n🔴 Please try again later.",
           parse_mode: "html",
@@ -64,7 +64,8 @@ bot.command("/top/anime?filter=airing", (ctx) => {
     ctx.replyWithPhoto(
       {
         url:
-          d.data[0]?.images.jpg?.large_image_url || "./assets/robin-facing.jpg",
+          d.data[0]?.images.jpg?.large_image_url ||
+          "../assets/robin-facing.jpg",
       },
       {
         caption: message.trim(),
@@ -115,7 +116,7 @@ bot.action(/topairpage ([0-9]+)/, (ctx) => {
         {
           media:
             d.data[0]?.images.jpg?.large_image_url ||
-            "./assets/robin-facing.jpg",
+            "../assets/robin-facing.jpg",
           type: "photo",
           chat_id: ctx.callbackQuery.message.chat.id,
           message_id: ctx.callbackQuery.message.message_id,
@@ -163,7 +164,8 @@ bot.command("popular", (ctx) => {
     ctx.replyWithPhoto(
       {
         url:
-          d.data[0]?.images.jpg?.large_image_url || "./assets/robin-facing.jpg",
+          d.data[0]?.images.jpg?.large_image_url ||
+          "../assets/robin-facing.jpg",
       },
       {
         caption: message.trim(),
@@ -209,7 +211,7 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
         {
           media:
             d.data[0]?.images.jpg?.large_image_url ||
-            "./assets/robin-facing.jpg",
+            "../assets/robin-facing.jpg",
           type: "photo",
           chat_id: ctx.callbackQuery.message.chat.id,
           message_id: ctx.callbackQuery.message.message_id,
@@ -240,7 +242,7 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
 //     ctx.replyWithPhoto(
 //       {
 //         url:
-//           d.data[0]?.images.jpg?.large_image_url || "./assets/robin-facing.jpg",
+//           d.data[0]?.images.jpg?.large_image_url || "../assets/robin-facing.jpg",
 //       },
 //       {
 //         caption: `<b>✨LATEST SUB EP✨</b>\n🔸Anime: <b>${
@@ -294,7 +296,7 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
 //     buttons.push(btn);
 //     ctx.editMessageMedia(
 //       {
-//         media: d[ep].animeImg || "./robin.jpg",
+//         media: d[ep].animeImg || "../robin.jpg",
 //         type: "photo",
 //         chat_id: ctx.callbackQuery.message.chat.id,
 //         message_id: ctx.callbackQuery.message.message_id,
@@ -350,7 +352,7 @@ bot.action(/details ([0-9]+)/, (ctx) => {
         ? d.data.synopsis.slice(0, 1000 - caption.length) + "..."
         : d.data.synopsis
     }`;
-    ctx.sendPhoto(d.data.images.jpg?.large_image_url || "./robin.jpg", {
+    ctx.sendPhoto(d.data.images.jpg?.large_image_url || "../robin.jpg", {
       caption,
       parse_mode: "HTML",
     });
