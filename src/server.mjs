@@ -18,27 +18,21 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 // });
 
 bot.command("start", (ctx) => {
-  ctx.replyWithPhoto(
-    { source: "../assets/robin-facing.jpg" },
-    {
-      caption:
-        "Konnichiwa😇😇\n\nI'm <b>Robin</b>. I can generate anime related informations, latest episodes, popular animes and much more. I'm still learning (beta) and I may make mistakes. I look forward to help you.✨✨",
-      parse_mode: "html",
-    }
-  );
+  ctx.replyWithPhoto("../assets/robin-facing.jpg", {
+    caption:
+      "Konnichiwa😇😇\n\nI'm <b>Robin</b>. I can generate anime related informations, latest episodes, popular animes and much more. I'm still learning (beta) and I may make mistakes. I look forward to help you.✨✨",
+    parse_mode: "html",
+  });
 });
 
 //top airing command
 bot.command("/top/anime?filter=airing", (ctx) => {
   api(`${URL}/top-airing`, (d) => {
     if (d.data.length < 1) {
-      ctx.replyWithPhoto(
-        { source: "../assets/no-robin.jpg" },
-        {
-          caption: "<b>💨 No anime found!!</b>\n\n🔴 Please try again later.",
-          parse_mode: "html",
-        }
-      );
+      ctx.replyWithPhoto("../assets/no-robin.jpg", {
+        caption: "<b>💨 No anime found!!</b>\n\n🔴 Please try again later.",
+        parse_mode: "html",
+      });
       return;
     }
     let message = "✨Top Airing Anime(page 1)✨\n\n";
@@ -62,11 +56,11 @@ bot.command("/top/anime?filter=airing", (ctx) => {
     buttons.push(rowb);
     message += "🔻select any anime for more details🔻";
     ctx.replyWithPhoto(
-      {
-        url:
-          d.data[0]?.images.jpg?.large_image_url ||
-          "../assets/robin-facing.jpg",
-      },
+      d.data[0]?.images.jpg?.large_image_url
+        ? {
+            url: d.data[0]?.images.jpg?.large_image_url,
+          }
+        : "../assets/robin-facing.jpg",
       {
         caption: message.trim(),
         parse_mode: "html",
@@ -162,11 +156,11 @@ bot.command("popular", (ctx) => {
     buttons.push(rowb);
     message += "\n🔻select any anime for more details🔻";
     ctx.replyWithPhoto(
-      {
-        url:
-          d.data[0]?.images.jpg?.large_image_url ||
-          "../assets/robin-facing.jpg",
-      },
+      d.data[0]?.images.jpg?.large_image_url
+        ? {
+            url: d.data[0]?.images.jpg?.large_image_url,
+          }
+        : "../assets/robin-facing.jpg",
       {
         caption: message.trim(),
         parse_mode: "html",
