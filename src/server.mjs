@@ -25,12 +25,11 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 // Load the image into memory during initialization
-const robinImage = readFileSync(join(__dirname, "../assets/robin-facing.jpg"));
 
 bot.command("start", async (ctx) => {
   console.log("started");
   await ctx.replyWithPhoto(
-    { source: robinImage },
+    { source: readFileSync(join(__dirname, "../assets/robin-facing.jpg")) },
     {
       caption:
         "Konnichiwa😇😇\n\nI'm <b>Robin</b>. I can generate anime related informations, latest episodes, popular animes and much more. I'm still learning (beta) and I may make mistakes. I look forward to help you.✨✨",
@@ -43,10 +42,13 @@ bot.command("start", async (ctx) => {
 bot.command("/top-airing", async (ctx) => {
   await api(`${API_URL}/top/anime?filter=airing`, async (d) => {
     if (d.data.length < 1) {
-      await ctx.replyWithPhoto(process.env.BOT_URL + "assets/no-robin.jpg", {
-        caption: "<b>💨 No anime found!!</b>\n\n🔴 Please try again later.",
-        parse_mode: "html",
-      });
+      await ctx.replyWithPhoto(
+        readFileSync(join(__dirname, "../assets/no-robin.jpg")),
+        {
+          caption: "<b>💨 No anime found!!</b>\n\n🔴 Please try again later.",
+          parse_mode: "html",
+        }
+      );
       return;
     }
     let message = "✨Top Airing Anime(page 1)✨\n\n";
@@ -69,12 +71,12 @@ bot.command("/top-airing", async (ctx) => {
       rowb.push({ text: ">", callback_data: "topairpage 2" });
     buttons.push(rowb);
     message += "🔻select any anime for more details🔻";
-    ctx.replyWithPhoto(
+    await ctx.replyWithPhoto(
       d.data[0]?.images.jpg?.large_image_url
         ? {
             url: d.data[0]?.images.jpg?.large_image_url,
           }
-        : process.env.BOT_URL + "assets/robin-facing.jpg",
+        : readFileSync(join(__dirname, "../assets/robin-facing.jpg")),
       {
         caption: message.trim(),
         parse_mode: "html",
@@ -87,9 +89,9 @@ bot.command("/top-airing", async (ctx) => {
 });
 
 //topairingaction
-bot.action(/topairpage ([0-9]+)/, (ctx) => {
+bot.action(/topairpage ([0-9]+)/, async (ctx) => {
   let pgnum = parseInt(ctx.match[1]);
-  api(`${API_URL}/top/anime?filter=airing&page=${pgnum}`, (d) => {
+  await api(`${API_URL}/top/anime?filter=airing&page=${pgnum}`, async (d) => {
     let message = `✨Top Airing Anime✨(page ${pgnum})\n\n`;
     let i = 1;
     let buttons = [];
@@ -119,12 +121,12 @@ bot.action(/topairpage ([0-9]+)/, (ctx) => {
             "inline_keyboard": buttons
         }
     }) */
-    ctx
+    await ctx
       .editMessageMedia(
         {
           media:
             d.data[0]?.images.jpg?.large_image_url ||
-            process.env.BOT_URL + "assets/robin-facing.jpg",
+            readFileSync(join(__dirname, "../assets/robin-facing.jpg")),
           type: "photo",
           chat_id: ctx.callbackQuery.message.chat.id,
           message_id: ctx.callbackQuery.message.message_id,
@@ -174,7 +176,7 @@ bot.command("popular", async (ctx) => {
         ? {
             url: d.data[0]?.images.jpg?.large_image_url,
           }
-        : process.env.BOT_URL + "assets/robin-facing.jpg",
+        : readFileSync(join(__dirname, "../assets/robin-facing.jpg")),
       {
         caption: message.trim(),
         parse_mode: "html",
@@ -188,59 +190,62 @@ bot.command("popular", async (ctx) => {
 
 bot.action(/popularpage ([0-9]+)/, async (ctx) => {
   let pgnum = parseInt(ctx.match[1]);
-  await api(`${API_URL}/top/anime?filter=bypopularity&page=${pgnum}`, (d) => {
-    if (d.data.length < 1) {
-      ctx.reply("No more found!!");
-    }
-    let message = `✨Popular Anime✨(page ${pgnum})\n\n`;
-    let i = 1;
-    let buttons = [];
-    let rowb = [];
-    for (let e of d.data) {
-      message += `${i}) Title:  <b>${
-        e.title_english || e.title || "No Title"
-      }</b>\n`;
-      if (rowb.length < 4) {
-        rowb.push({ text: `${i}`, callback_data: `details ${i}` });
-      } else {
-        buttons.push(rowb);
-        rowb = [{ text: `${i}`, callback_data: `details ${i}` }];
+  await api(
+    `${API_URL}/top/anime?filter=bypopularity&page=${pgnum}`,
+    async (d) => {
+      if (d.data.length < 1) {
+        await ctx.reply("No more found!!");
       }
-      i++;
-    }
-    if (pgnum - 1 > 0)
-      rowb.push({ text: "<", callback_data: `popularpage ${pgnum - 1}` });
-    if (d.pagination.has_next_page)
-      rowb.push({ text: ">", callback_data: `popularpage ${pgnum + 1}` });
-    buttons.push(rowb);
-    message += "\n🔻select any anime for more details🔻";
-    ctx
-      .editMessageMedia(
-        {
-          media:
-            d.data[0]?.images.jpg?.large_image_url ||
-            process.env.BOT_URL + "assets/robin-facing.jpg",
-          type: "photo",
-          chat_id: ctx.callbackQuery.message.chat.id,
-          message_id: ctx.callbackQuery.message.message_id,
-          caption: message.trim(),
-          parse_mode: "html",
-        },
-        {
-          reply_markup: {
-            inline_keyboard: buttons,
-          },
+      let message = `✨Popular Anime✨(page ${pgnum})\n\n`;
+      let i = 1;
+      let buttons = [];
+      let rowb = [];
+      for (let e of d.data) {
+        message += `${i}) Title:  <b>${
+          e.title_english || e.title || "No Title"
+        }</b>\n`;
+        if (rowb.length < 4) {
+          rowb.push({ text: `${i}`, callback_data: `details ${i}` });
+        } else {
+          buttons.push(rowb);
+          rowb = [{ text: `${i}`, callback_data: `details ${i}` }];
         }
-      )
-      .then(() => {
-        return;
-      })
-      .catch((err) => console.log(err));
-  });
+        i++;
+      }
+      if (pgnum - 1 > 0)
+        rowb.push({ text: "<", callback_data: `popularpage ${pgnum - 1}` });
+      if (d.pagination.has_next_page)
+        rowb.push({ text: ">", callback_data: `popularpage ${pgnum + 1}` });
+      buttons.push(rowb);
+      message += "\n🔻select any anime for more details🔻";
+      await ctx
+        .editMessageMedia(
+          {
+            media:
+              d.data[0]?.images.jpg?.large_image_url ||
+              readFileSync(join(__dirname, "../assets/robin-facing.jpg")),
+            type: "photo",
+            chat_id: ctx.callbackQuery.message.chat.id,
+            message_id: ctx.callbackQuery.message.message_id,
+            caption: message.trim(),
+            parse_mode: "html",
+          },
+          {
+            reply_markup: {
+              inline_keyboard: buttons,
+            },
+          }
+        )
+        .then(() => {
+          return;
+        })
+        .catch((err) => console.log(err));
+    }
+  );
 });
 
 //Recent Episodes
-// bot.command(["recentsubep", "recentsubeps", "newsubep"], (ctx) => {
+// bot.command(["recentsubep", "recentsubeps", "newsubep"], async (ctx) => {
 //   api(`${API_URL}/recent-release?type=1&page=1`, (d) => {
 //     console.log(d);
 //     if (d.data?.length < 1) {
@@ -275,7 +280,7 @@ bot.action(/popularpage ([0-9]+)/, async (ctx) => {
 //   });
 // });
 
-// bot.action(/recentep ([A-z]+) ([0-9]+)/, (ctx) => {
+// bot.action(/recentep ([A-z]+) ([0-9]+)/, async (ctx) => {
 //   let ep = parseInt(ctx.match[2]) - 1;
 //   let types = { sub: 1, dub: 2, chi: 3 };
 //   let type = types[ctx.match[1]] || 1;
@@ -332,16 +337,16 @@ bot.use(session());
 bot.use(stage.middleware());
 
 //anime search
-bot.command(["search", "animesearch", "anime", "anime-search"], (ctx) =>
+bot.command(["search", "animesearch", "anime", "anime-search"], async (ctx) =>
   ctx.scene.enter("anime-search")
 );
 
 //anime details action
-bot.action(/details ([0-9]+)/, (ctx) => {
+bot.action(/details ([0-9]+)/, async (ctx) => {
   let id = ctx.match[1];
-  api(`${API_URL}/anime/${id}`, (d) => {
+  api(`${API_URL}/anime/${id}`, async(d) => {
     if (d.error || !d.data || !d.data.title) {
-      ctx.reply("Sorry. Anime Not Found.");
+      await ctx.reply("Sorry. Anime Not Found.");
       return;
     }
     let caption = `<b>Title</b>: ${
@@ -360,7 +365,7 @@ bot.action(/details ([0-9]+)/, (ctx) => {
         ? d.data.synopsis.slice(0, 1000 - caption.length) + "..."
         : d.data.synopsis
     }`;
-    ctx.sendPhoto(
+    await ctx.sendPhoto(
       d.data.images.jpg?.large_image_url ||
         process.env.BOT_URL + "assets/robin.jpg",
       {
