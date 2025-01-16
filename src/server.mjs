@@ -1,11 +1,13 @@
 //local process env
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 
 //imports
-const { Telegraf, session, Scenes } = require("telegraf");
-const express = require("express");
-const { api } = require("./api.js");
-const { superWizard } = require("./scenes.js");
+import express from "express";
+import { Telegraf, session, Scenes } from "telegraf";
+import { api } from "./api.js";
+import { superWizard } from "./scenes.js";
+
 const URL = process.env.URL;
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -355,18 +357,31 @@ bot.action(/details ([0-9]+)/, (ctx) => {
   });
 });
 const app = express();
-(async () => {
-  app.use(await bot.createWebhook({ domain: process.env.BOT_URL }));
-  app.get("/", function (req, res) {
-    res.send("Hello World");
-    console.log("running");
-  });
-  // bot.launch(/* {
-  //   webhook: { domain: process.env.BOT_URL },
-  // } */);
-})();
+async function initializeServer() {
+  try {
+    // First, define your routes
+    app.use(
+      await bot.createWebhook({
+        domain: process.env.BOT_URL,
+      })
+    );
+    console.log(app._router);
+    app.get("/", function (req, res) {
+      res.send("Hello World");
+      console.log("running");
+    });
 
-app.listen(process.env.PORT, () =>
-  console.log("server running on port " + process.env.PORT)
-);
-module.exports = app;
+    // Start the server
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log("Server running on port " + PORT);
+    });
+  } catch (error) {
+    console.error("Failed to initialize server:", error);
+  }
+}
+
+// Call the initialization function
+await initializeServer();
+
+export default app;
