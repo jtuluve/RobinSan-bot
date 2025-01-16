@@ -8,7 +8,11 @@ import { Telegraf, session, Scenes } from "telegraf";
 import { api } from "./api.js";
 import { superWizard } from "./scenes.js";
 
-const URL = process.env.URL;
+import { readFileSync } from "fs";
+import { join } from "path";
+import { fileURLToPath } from "url";
+
+const API_URL = process.env.URL;
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -17,19 +21,29 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 //   return await next();
 // });
 
-bot.command("start", (ctx) => {
-  ctx.replyWithPhoto(process.env.BOT_URL + "assets/robin-facing.jpg", {
-    caption:
-      "Konnichiwa😇😇\n\nI'm <b>Robin</b>. I can generate anime related informations, latest episodes, popular animes and much more. I'm still learning (beta) and I may make mistakes. I look forward to help you.✨✨",
-    parse_mode: "html",
-  });
+// Get the directory name in ESM
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+
+// Load the image into memory during initialization
+const robinImage = readFileSync(join(__dirname, "../assets/robin-facing.jpg"));
+
+bot.command("start", async (ctx) => {
+  console.log("started");
+  await ctx.replyWithPhoto(
+    { source: robinImage },
+    {
+      caption:
+        "Konnichiwa😇😇\n\nI'm <b>Robin</b>. I can generate anime related informations, latest episodes, popular animes and much more. I'm still learning (beta) and I may make mistakes. I look forward to help you.✨✨",
+      parse_mode: "html",
+    }
+  );
 });
 
 //top airing command
-bot.command("/top/anime?filter=airing", (ctx) => {
-  api(`${URL}/top-airing`, (d) => {
+bot.command("/top-airing", async (ctx) => {
+  await api(`${API_URL}/top/anime?filter=airing`, async (d) => {
     if (d.data.length < 1) {
-      ctx.replyWithPhoto(process.env.BOT_URL + "assets/no-robin.jpg", {
+      await ctx.replyWithPhoto(process.env.BOT_URL + "assets/no-robin.jpg", {
         caption: "<b>💨 No anime found!!</b>\n\n🔴 Please try again later.",
         parse_mode: "html",
       });
@@ -75,7 +89,7 @@ bot.command("/top/anime?filter=airing", (ctx) => {
 //topairingaction
 bot.action(/topairpage ([0-9]+)/, (ctx) => {
   let pgnum = parseInt(ctx.match[1]);
-  api(`${URL}/top/anime?filter=airing&page=${pgnum}`, (d) => {
+  api(`${API_URL}/top/anime?filter=airing&page=${pgnum}`, (d) => {
     let message = `✨Top Airing Anime✨(page ${pgnum})\n\n`;
     let i = 1;
     let buttons = [];
@@ -130,8 +144,8 @@ bot.action(/topairpage ([0-9]+)/, (ctx) => {
 });
 
 //popular command
-bot.command("popular", (ctx) => {
-  api(`${URL}/top/anime?filter=bypopularity`, (d) => {
+bot.command("popular", async (ctx) => {
+  await api(`${API_URL}/top/anime?filter=bypopularity`, async (d) => {
     let message = "✨Popular Anime✨\n\n";
     let i = 1;
     let buttons = [];
@@ -155,7 +169,7 @@ bot.command("popular", (ctx) => {
     rowb.push({ text: ">", callback_data: "popularpage 2" });
     buttons.push(rowb);
     message += "\n🔻select any anime for more details🔻";
-    ctx.replyWithPhoto(
+    await ctx.replyWithPhoto(
       d.data[0]?.images.jpg?.large_image_url
         ? {
             url: d.data[0]?.images.jpg?.large_image_url,
@@ -172,9 +186,9 @@ bot.command("popular", (ctx) => {
   });
 });
 
-bot.action(/popularpage ([0-9]+)/, (ctx) => {
+bot.action(/popularpage ([0-9]+)/, async (ctx) => {
   let pgnum = parseInt(ctx.match[1]);
-  api(`${URL}/top/anime?filter=bypopularity&page=${pgnum}`, (d) => {
+  await api(`${API_URL}/top/anime?filter=bypopularity&page=${pgnum}`, (d) => {
     if (d.data.length < 1) {
       ctx.reply("No more found!!");
     }
@@ -227,7 +241,7 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
 
 //Recent Episodes
 // bot.command(["recentsubep", "recentsubeps", "newsubep"], (ctx) => {
-//   api(`${URL}/recent-release?type=1&page=1`, (d) => {
+//   api(`${API_URL}/recent-release?type=1&page=1`, (d) => {
 //     console.log(d);
 //     if (d.data?.length < 1) {
 //       ctx.reply("Sorry no episodes found!! Please try again later.");
@@ -265,7 +279,7 @@ bot.action(/popularpage ([0-9]+)/, (ctx) => {
 //   let ep = parseInt(ctx.match[2]) - 1;
 //   let types = { sub: 1, dub: 2, chi: 3 };
 //   let type = types[ctx.match[1]] || 1;
-//   api(`${URL}/recent-release?type=${type}`, (d) => {
+//   api(`${API_URL}/recent-release?type=${type}`, (d) => {
 //     ep = ep == -1 ? d.data.length - 1 : ep;
 //     console.log(d.data[0], d[1]);
 //     if (!d[ep]) return ctx.reply("No new episodes!!");
@@ -325,7 +339,7 @@ bot.command(["search", "animesearch", "anime", "anime-search"], (ctx) =>
 //anime details action
 bot.action(/details ([0-9]+)/, (ctx) => {
   let id = ctx.match[1];
-  api(`${URL}/anime/${id}`, (d) => {
+  api(`${API_URL}/anime/${id}`, (d) => {
     if (d.error || !d.data || !d.data.title) {
       ctx.reply("Sorry. Anime Not Found.");
       return;
@@ -357,6 +371,8 @@ bot.action(/details ([0-9]+)/, (ctx) => {
   });
 });
 const app = express();
+app.use("/assets", express.static("../assets"));
+
 async function initializeServer() {
   try {
     // First, define your routes
@@ -370,8 +386,6 @@ async function initializeServer() {
       res.send("Hello World");
       console.log("running");
     });
-
-    app.use("/assets", express.static(__dirname + "/assets"));
 
     // Start the server
     const PORT = process.env.PORT || 3000;
