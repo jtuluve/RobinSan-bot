@@ -39,7 +39,7 @@ bot.command("start", async (ctx) => {
 });
 
 //top airing command
-bot.command("/top-airing", async (ctx) => {
+bot.command("topairing", async (ctx) => {
   await api(`${API_URL}/top/anime?filter=airing`, async (d) => {
     if (d.data.length < 1) {
       await ctx.replyWithPhoto(
@@ -56,9 +56,7 @@ bot.command("/top-airing", async (ctx) => {
     let buttons = [];
     let rowb = [];
     for (let e of d.data) {
-      message += `${i}) Title:  <b>${
-        e.title_english || e.title || "No Title"
-      }</b>\n`;
+      message += `${i}) <b>${e.title_english || e.title || "No Title"}</b>\n`;
       if (rowb.length < 4) {
         rowb.push({ text: `${i}`, callback_data: `details ${e.mal_id}` });
       } else {
@@ -78,7 +76,7 @@ bot.command("/top-airing", async (ctx) => {
           }
         : readFileSync(join(__dirname, "../assets/robin-facing.jpg")),
       {
-        caption: message.trim(),
+        caption: message,
         parse_mode: "html",
         reply_markup: {
           inline_keyboard: buttons,
