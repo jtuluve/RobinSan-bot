@@ -1,5 +1,5 @@
 {
-  "name": "anime-bot",
+  "name": "robin-san-bot",
   "version": "1.0.0",
   "description": "",
   "main": "src/server.mjs",
@@ -7,9 +7,14 @@
     "start": "node src/server.mjs"
   },
   "keywords": [
+    "bot",
+    "telegram",
+    "robin-san",
+    "robin-san-bot",
     "anime-bot",
     "telegram-bot",
-    "anime-search-bot"
+    "anime-search-bot",
+    "anime-info-bot"
   ],
   "author": "j tuluve",
   "license": "ISC",
