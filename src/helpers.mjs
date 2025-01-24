@@ -134,9 +134,15 @@ export async function sendPopular(ctx, pgnum) {
   if (d.data.length < 1) {
     await ctx.reply("No more found!!");
   }
-  splitAndSend(`✨Popular Anime✨(page ${pgnum})\n\n`, ctx, d, (i, e) => {
-    return `${i}) <b>${e.title_english || e.title || "No Title"}</b>\n`;
-  });
+  splitAndSend(
+    `✨Popular Anime✨(page ${pgnum})\n\n`,
+    ctx,
+    "popularpage",
+    d,
+    (i, e) => {
+      return `${i}) <b>${e.title_english || e.title || "No Title"}</b>\n`;
+    }
+  );
 }
 
 /**
