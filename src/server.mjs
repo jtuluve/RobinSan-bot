@@ -35,6 +35,24 @@ bot.command("start", async (ctx) => {
   );
 });
 
+//help
+bot.command("help", async (ctx) => {
+  await ctx.reply(
+    `<b>Here are the commands you can use:</b>
+    
+/start - Start interacting with me
+/topairing - Get the top currently airing anime
+/popular - Get the most popular anime
+/search - Search for any anime by name
+/seasonal - See anime from the current season
+/upcoming - Explore top upcoming anime
+/random - Get a random anime suggestion
+/genre - Browse anime by genre
+/help - Show this help message`,
+    { parse_mode: "html" }
+  );
+});
+
 //top airing command
 bot.command("topairing", async (ctx) => {
   await sendTopAiring(ctx, 1);
@@ -72,15 +90,18 @@ bot.command("genre", async (ctx) => {
       return ctx.reply("No genres found. Please try again later.");
     }
     let l = [];
-    let keyboard = []
+    let keyboard = [];
     genres.forEach((genre) => {
-      l.push({ text: genre.name, callback_data: `genrepage ${genre.mal_id} 1` });
-      if(l.length >=4) {
+      l.push({
+        text: genre.name,
+        callback_data: `genrepage ${genre.mal_id} 1`,
+      });
+      if (l.length >= 4) {
         keyboard.push(l);
         l = [];
       }
     });
-    if(l.length > 0) keyboard.push(l);
+    if (l.length > 0) keyboard.push(l);
 
     await ctx.reply("Select a genre to see anime:", {
       reply_markup: {
@@ -198,7 +219,7 @@ async function initializeServer() {
     });
 
     const PORT = process.env.PORT || 3000;
-    if(global.expServer) global.expServer.close();
+    if (global.expServer) global.expServer.close();
     global.expServer = app.listen(PORT, () => {
       console.log("Server running on port " + PORT);
     });
