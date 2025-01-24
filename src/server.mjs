@@ -38,17 +38,26 @@ bot.command("start", async (ctx) => {
 //help
 bot.command("help", async (ctx) => {
   await ctx.reply(
-    `<b>Here are the commands you can use:</b>
-    
-/start - Start interacting with me
-/topairing - Get the top currently airing anime
-/popular - Get the most popular anime
-/search - Search for any anime by name
-/seasonal - See anime from the current season
-/upcoming - Explore top upcoming anime
-/random - Get a random anime suggestion
-/genre - Browse anime by genre
-/help - Show this help message`,
+    `<b>✨ Robin - Your Anime Companion ✨</b>
+
+Here are the commands you can use:
+
+<b>General Commands:</b>
+/start - Begin your journey with me
+/help - View this help message
+
+<b>Anime Exploration:</b>
+/topairing - Discover the top currently airing anime 📺
+/popular - Explore the most popular anime 🎉
+/seasonal - Check out anime from the current season 🍁
+/upcoming - See the most anticipated upcoming anime 📅
+/random - Get a random anime recommendation 🎲
+
+<b>Search & Discover:</b>
+/search - Search for anime by name 🔍
+/genre - Browse anime by genres 🗂️
+
+I’m here to make your anime journey enjoyable and informative. Feel free to reach out anytime! 😊`,
     { parse_mode: "html" }
   );
 });
