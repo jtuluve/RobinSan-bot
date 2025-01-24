@@ -18,6 +18,7 @@ import {
   sendTopUpcoming,
 } from "./helpers.mjs";
 import axios from "axios";
+import { informAdmin } from "./admin.js";
 
 const API_URL = process.env.API_URL;
 const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -37,8 +38,9 @@ bot.command("start", async (ctx) => {
 
 //help
 bot.command("help", async (ctx) => {
-  await ctx.reply(
-    `<b>✨ Robin - Your Anime Companion ✨</b>
+  try {
+    await ctx.reply(
+      `<b>✨ Robin - Your Anime Companion ✨</b>
 
 Here are the commands you can use:
 
@@ -58,8 +60,11 @@ Here are the commands you can use:
 /genre - Browse anime by genres 🗂️
 
 I’m here to make your anime journey enjoyable and informative. Feel free to reach out anytime! 😊`,
-    { parse_mode: "html" }
-  );
+      { parse_mode: "html" }
+    );
+  } catch (error) {
+    await informAdmin(ctx, error.message + "\n" + "help");
+  }
 });
 
 //top airing command
@@ -118,8 +123,7 @@ bot.command("genre", async (ctx) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching genres:", error);
-    await ctx.reply("An error occurred while fetching genres.");
+    await informAdmin(ctx, error.message + "\n" + "genre");
   }
 });
 

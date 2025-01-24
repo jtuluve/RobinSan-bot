@@ -9,6 +9,7 @@ exports.informAdmin = async function informAdmin(ctx, message) {
     console.log("Admin id not found!");
   }
   try {
+    await ctx.reply("Something went wrong! Please try again later.");
     await ctx.telegram.sendMessage(
       process.env.ADMIN_ID,
       "‼️⁉️⚠️⚠️⚠️‼️⁉️\n" + message
