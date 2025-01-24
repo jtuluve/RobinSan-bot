@@ -1,21 +1,25 @@
 {
-  "name": "anime-bot",
+  "name": "robin-san-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "src/server.js",
+  "main": "src/server.mjs",
   "scripts": {
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/server.js"
+    "start": "node src/server.mjs"
   },
   "keywords": [
+    "bot",
+    "telegram",
+    "robin-san",
+    "robin-san-bot",
     "anime-bot",
     "telegram-bot",
-    "anime-search-bot"
+    "anime-search-bot",
+    "anime-info-bot"
   ],
   "author": "j tuluve",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.9",
     "case-anything": "^2.1.13",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
