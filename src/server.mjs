@@ -26,14 +26,21 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 /* Bot commands */
 bot.command("start", async (ctx) => {
-  await ctx.replyWithPhoto(
-    { source: readFileSync(join(__dirname, "../assets/robin-facing.jpg")) },
-    {
-      caption:
-        "Konnichiwa😇😇\n\nI'm <b>Robin</b>. I can generate anime related informations, latest episodes, popular animes and much more. I'm still learning (beta) and I may make mistakes. I look forward to help you.✨✨",
-      parse_mode: "html",
+  try {
+    if (ctx.message.message_id < 2) {
+      informAdmin(ctx, "A new user!\n" + ctx.from.username);
     }
-  );
+    await ctx.replyWithPhoto(
+      { source: readFileSync(join(__dirname, "../assets/robin-facing.jpg")) },
+      {
+        caption:
+          "Konnichiwa😇😇\n\nI'm <b>Robin</b>. I can generate anime related informations, latest episodes, popular animes and much more. I'm still learning (beta) and I may make mistakes. I look forward to help you.✨✨",
+        parse_mode: "html",
+      }
+    );
+  } catch (error) {
+    await informAdmin(ctx, error.message + "\n" + "start");
+  }
 });
 
 //help
