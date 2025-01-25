@@ -2,6 +2,10 @@
 
 Robin-San Bot is a feature-rich, anime-centric Telegram bot designed to provide users with the latest information about anime, including top airing shows, popular titles, seasonal recommendations, and more. This bot is in beta and aims to deliver an enjoyable and interactive experience for anime enthusiasts.
 
+## Try it out
+
+Robin-San Bot is available on telegram. You can try it out here: [https://telegram.me/RobinSanBot](https://telegram.me/RobinSanBot) or [https://t.me/RobinSanBot](https://t.me/RobinSanBot) 
+
 ## ✨Features
 
 - **Start Command**: A warm greeting from Robin-San, introducing its capabilities.
